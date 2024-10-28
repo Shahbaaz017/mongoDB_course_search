@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>MongoDB Course Search</title>
+</head>
+<body>
+    <div class="search-container">
+        <h1>MongoDB Course Search</h1>
+        <form method="POST">
+            <textarea name="search_term" rows="2" cols="50">{{ request.form.search_term or "" }}</textarea><br><br>
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    {% if result %}
+    <div class="result-container">
+        {% for course in result %}
+        <div class="course" onclick="showOverlay('overlay-{{ loop.index }}')">
+            <div class="course_name">{{ course.course_name }}</div>
+            <div class="course_type">{{ course.course_type | join(', ') }}</div>
+            <div class="course_fees">{{ course.course_approximate_fees }}</div>
+            <div class="course_countries">
+                Available in:
+                {% for university in course.university_details %}
+                    {{ university.country }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Overlay containing full details -->
+        <div class="course-overlay" id="overlay-{{ loop.index }}">
+            <div class="overlay-content">
+                <div class="overlay-plot">{{ course.fullplot }}
+                    <div class="course_countries">
+                        {% for university in course.university_details %}
+                            {{ university.university_name }} in {{university.city}}, {{university.country}} approximate fees {{university.fees}}.<br>
+                            
+                            {% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeOverlay()">Close</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <script>
+    function showOverlay(overlayId) {
+        console.log("Showing overlay:", overlayId);
+        closeOverlay();  // Close any open overlays first
+        const overlay = document.getElementById(overlayId);
+        overlay.style.display = 'flex';  // Use flex to center content
+        overlay.classList.add('overlay-show');
+    }
+
+    function closeOverlay() {
+        console.log("Close button clicked");
+        const overlays = document.querySelectorAll('.course-overlay');
+        overlays.forEach(function(overlay) {
+            overlay.style.display = 'none';  // Hide all overlays
+            overlay.classList.remove('overlay-show');
+        });
+    }
+
+    // Optional: Close overlay if clicking outside the content area
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('course-overlay')) {
+            closeOverlay();
+        }
+    });
+    </script>
+</body>
+</html>
